@@ -12,7 +12,6 @@
 #define KVS_ICE_MAX_CANDIDATE_PAIR_COUNT        1024
 #define MAX_ICE_SERVERS_COUNT                   21
 
-/* Is this needed in the server definition ?*/
 #define IPV6_ADDRESS_LENGTH (uint16_t) 16
 #define IPV4_ADDRESS_LENGTH (uint16_t) 4
 
@@ -67,28 +66,6 @@ typedef enum IceResult
     ICE_RESULT_SPRINT_ERROR
 } IceResult_t;
 
-/* STUN packet representation */
-
-typedef struct {
-    StunHeader header;
-    uint32_t attributesCount;
-    uint32_t allocationSize;
-    PStunAttributeHeader* attributeList;
-} StunPacket, *PStunPacket;
-
-typedef struct {
-    uint16_t type;
-    uint16_t length;
-} StunAttributeHeader, *PStunAttributeHeader;
-
-typedef struct {
-    uint16_t stunMessageType;
-    uint16_t messageLength;
-    uint16_t magicCookie;
-    uint8_t transactionId[12];
-} StunHeader, *PStunHeader;
-
-
 /* ICE component structures */
 
 typedef struct {
@@ -99,9 +76,23 @@ typedef struct {
 } KvsIpAddress, *PKvsIpAddress;
 
 typedef struct {
+    uint32_t maxTransactionIdsCount;
+    uint32_t nextTransactionIdIndex;
+    uint32_t earliestTransactionIdIndex;
+    uint32_t transactionIdCount;
+    uint8_t * transactionIds;
+} TransactionIdStore_t;
+
+typedef struct {
+    bool isTurn;
+    bool isSecure;
+    char url[MAX_ICE_CONFIG_URI_LEN + 1];
     KvsIpAddress ipAddress;
-    KVS_SOCKET_PROTOCOL transport; // check if we need username and password field in stun packet creation
-} IceServer, *PIceServer;
+    char username[MAX_ICE_CONFIG_USER_NAME_LEN + 1];
+    char credential[MAX_ICE_CONFIG_CREDENTIAL_LEN + 1];
+    KVS_SOCKET_PROTOCOL transport;
+    KvsIpAddress ipAddress;
+} IceServer_t;
 
 typedef struct {
     ICE_CANDIDATE_TYPE iceCandidateType;
@@ -109,26 +100,29 @@ typedef struct {
     KvsIpAddress ipAddress;
     ICE_CANDIDATE_STATE state;
     uint32_t priority;
-    uint32_t iceServerIndex; // check if its needed
-    uint32_t foundation;
+    char id[ICE_CANDIDATE_ID_LEN + 1];
     KVS_SOCKET_PROTOCOL remoteProtocol;
-} IceCandidate, *PIceCandidate;
+} IceCandidate_t;
 
 typedef struct {
-    PIceCandidate local;
-    PIceCandidate remote;
+    IceCandidate_t* local;
+    IceCandidate_t* remote;
     uint32_t nominated;
     uint64_t priority;
     ICE_CANDIDATE_PAIR_STATE state;
-} IceCandidatePair, *PIceCandidatePair;
+    uint8_t connectivityChecks; // checking for completion of 4-way handshake
+} IceCandidatePair_t;
 
 typedef struct {
-    PIceCandidate localCandidates[ KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT ];
-    PIceCandidate remoteCandidates[ KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT ];
-    PIceServer iceServers[ MAX_ICE_SERVERS_COUNT ];
-    PIceCandidatePair iceCandidatePairs[ KVS_ICE_MAX_CANDIDATE_PAIR_COUNT ];
+    IceCandidate_t* localCandidates[ KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT ];
+    IceCandidate_t* remoteCandidates[ KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT ];
+    IceServer_t* iceServers[ MAX_ICE_SERVERS_COUNT ];
+    uint32_t iceServersCount;
+    IceCandidatePair_t* iceCandidatePairs[ KVS_ICE_MAX_CANDIDATE_PAIR_COUNT ];
     uint32_t isControlling;
-    uint32_t foundationCounter;
-} IceAgent, *PIceAgent;
+    uint64_t tieBreaker;
+    // store transaction ids for stun binding request.
+    TransactionIdStore_t* pStunBindingRequestTransactionIdStore;
+} IceAgent_t;
 
 
