@@ -12,9 +12,6 @@
 #define KVS_ICE_MAX_CANDIDATE_PAIR_COUNT        1024
 #define MAX_ICE_SERVERS_COUNT                   21
 
-#define IPV6_ADDRESS_LENGTH (uint16_t) 16
-#define IPV4_ADDRESS_LENGTH (uint16_t) 4
-
 /* ICE candidate priorities */
 #define ICE_PRIORITY_HOST_CANDIDATE_TYPE_PREFERENCE             126
 #define ICE_PRIORITY_SERVER_REFLEXIVE_CANDIDATE_TYPE_PREFERENCE 100
@@ -22,24 +19,19 @@
 #define ICE_PRIORITY_RELAYED_CANDIDATE_TYPE_PREFERENCE          0
 #define ICE_PRIORITY_LOCAL_PREFERENCE                           65535
 
-/* STUN headers */
-#define STUN_HEADER_MAGIC_COOKIE                    (uint32_t) 0x2112A442
-#define STUN_PACKET_TYPE_BINDING_REQUEST            (uint16_t) 0x0001
-#define STUN_PACKET_TYPE_BINDING_RESPONSE_SUCCESS   (uint16_t) 0x0101
-
 
 typedef enum {
     ICE_CANDIDATE_TYPE_HOST = 0,
     ICE_CANDIDATE_TYPE_PEER_REFLEXIVE = 1,
     ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE = 2,
     ICE_CANDIDATE_TYPE_RELAYED = 3,
-} ICE_CANDIDATE_TYPE;
+} IceCandidateType_t;
 
 typedef enum {
     ICE_CANDIDATE_STATE_NEW,
     ICE_CANDIDATE_STATE_VALID,
     ICE_CANDIDATE_STATE_INVALID,
-} ICE_CANDIDATE_STATE;
+} IceCandidateState_t;
 
 typedef enum {
     ICE_CANDIDATE_PAIR_STATE_FROZEN = 0,
@@ -47,13 +39,13 @@ typedef enum {
     ICE_CANDIDATE_PAIR_STATE_IN_PROGRESS = 2,
     ICE_CANDIDATE_PAIR_STATE_SUCCEEDED = 3,
     ICE_CANDIDATE_PAIR_STATE_FAILED = 4,
-} ICE_CANDIDATE_PAIR_STATE;
+} IceCandidatePairState_t;
 
 typedef enum {
-    KVS_SOCKET_PROTOCOL_NONE,
-    KVS_SOCKET_PROTOCOL_TCP,
-    KVS_SOCKET_PROTOCOL_UDP,
-} KVS_SOCKET_PROTOCOL;
+    ICE_SOCKET_PROTOCOL_NONE,
+    ICE_SOCKET_PROTOCOL_TCP,
+    ICE_SOCKET_PROTOCOL_UDP,
+} IceSocketProtocol_t;
 
 typedef enum IceResult
 {
@@ -68,14 +60,16 @@ typedef enum IceResult
 
 /* ICE component structures */
 
-typedef struct {
+typedef struct IceIPAddress
+{
     uint16_t family;
     uint16_t port;
-    uint8_t address[IPV6_ADDRESS_LENGTH];
+    uint8_t address[16];
     uint32_t isPointToPoint;
-} KvsIpAddress, *PKvsIpAddress;
+} IceIPAddress_t;
 
-typedef struct {
+typedef struct TransactionIdStore
+{
     uint32_t maxTransactionIdsCount;
     uint32_t nextTransactionIdIndex;
     uint32_t earliestTransactionIdIndex;
@@ -83,37 +77,37 @@ typedef struct {
     uint8_t * transactionIds;
 } TransactionIdStore_t;
 
-typedef struct {
-    bool isTurn;
-    bool isSecure;
+typedef struct IceServer
+{
     char url[MAX_ICE_CONFIG_URI_LEN + 1];
-    KvsIpAddress ipAddress;
     char username[MAX_ICE_CONFIG_USER_NAME_LEN + 1];
     char credential[MAX_ICE_CONFIG_CREDENTIAL_LEN + 1];
-    KVS_SOCKET_PROTOCOL transport;
-    KvsIpAddress ipAddress;
+    IceSocketProtocol_t transport;
+    IceIPAddress_t ipAddress;
+    uint8_t IceServerAttributeFlag;
 } IceServer_t;
 
-typedef struct {
-    ICE_CANDIDATE_TYPE iceCandidateType;
+typedef struct IceCandidate
+{
+    IceCandidateType_t iceCandidateType;
     uint32_t isRemote;
-    KvsIpAddress ipAddress;
-    ICE_CANDIDATE_STATE state;
+    IceIPAddress_t ipAddress;
+    IceCandidateState_t state;
     uint32_t priority;
-    char id[ICE_CANDIDATE_ID_LEN + 1];
-    KVS_SOCKET_PROTOCOL remoteProtocol;
+    IceSocketProtocol_t remoteProtocol;
 } IceCandidate_t;
 
-typedef struct {
+typedef struct IceCandidatePair
+{
     IceCandidate_t* local;
     IceCandidate_t* remote;
     uint32_t nominated;
     uint64_t priority;
-    ICE_CANDIDATE_PAIR_STATE state;
-    uint8_t connectivityChecks; // checking for completion of 4-way handshake
+    IceCandidatePairState_t state;
 } IceCandidatePair_t;
 
-typedef struct {
+typedef struct IceAgent
+{
     IceCandidate_t* localCandidates[ KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT ];
     IceCandidate_t* remoteCandidates[ KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT ];
     IceServer_t* iceServers[ MAX_ICE_SERVERS_COUNT ];
@@ -121,7 +115,6 @@ typedef struct {
     IceCandidatePair_t* iceCandidatePairs[ KVS_ICE_MAX_CANDIDATE_PAIR_COUNT ];
     uint32_t isControlling;
     uint64_t tieBreaker;
-    // store transaction ids for stun binding request.
     TransactionIdStore_t* pStunBindingRequestTransactionIdStore;
 } IceAgent_t;
 
