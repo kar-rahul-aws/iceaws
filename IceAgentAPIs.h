@@ -5,12 +5,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define ICE_CANDIDATE_ID_LEN                    8
+#define ICE_CANDIDATE_ID_LEN                                    8
 
-#define KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT       100
-#define KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT      100
-#define KVS_ICE_MAX_CANDIDATE_PAIR_COUNT        1024
-#define MAX_ICE_SERVERS_COUNT                   21
+#define KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT                       100
+#define KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT                      100
+#define KVS_ICE_MAX_CANDIDATE_PAIR_COUNT                        1024
+#define MAX_ICE_SERVERS_COUNT                                   21
 
 /* ICE candidate priorities */
 #define ICE_PRIORITY_HOST_CANDIDATE_TYPE_PREFERENCE             126
@@ -18,6 +18,23 @@
 #define ICE_PRIORITY_PEER_REFLEXIVE_CANDIDATE_TYPE_PREFERENCE   110
 #define ICE_PRIORITY_RELAYED_CANDIDATE_TYPE_PREFERENCE          0
 #define ICE_PRIORITY_LOCAL_PREFERENCE                           65535
+
+/**
+ * Maximum allowed ICE configuration user name length
+ * https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_AWSAcuitySignalingService_GetIceServerConfig.html#API_AWSAcuitySignalingService_GetIceServerConfig_RequestSyntax
+ */
+#define MAX_ICE_CONFIG_USER_NAME_LEN                            256
+
+/**
+ * Maximum allowed ICE configuration password length
+ * https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_AWSAcuitySignalingService_IceServer.html#KinesisVideo-Type-AWSAcuitySignalingService_IceServer-Password
+ */
+#define MAX_ICE_CONFIG_CREDENTIAL_LEN                           256
+
+/**
+ * Maximum allowed ICE URI length
+ */
+#define MAX_ICE_CONFIG_URI_LEN                                  256
 
 
 typedef enum {
@@ -108,10 +125,14 @@ typedef struct IceCandidatePair
 
 typedef struct IceAgent
 {
+    char localUsername[MAX_ICE_CONFIG_USER_NAME_LEN + 1];
+    char localPassword[MAX_ICE_CONFIG_CREDENTIAL_LEN + 1];
+    char remoteUsername[MAX_ICE_CONFIG_USER_NAME_LEN + 1];
+    char remotePassword[MAX_ICE_CONFIG_CREDENTIAL_LEN + 1];
+    char combinedUserName[(MAX_ICE_CONFIG_USER_NAME_LEN + 1) << 1];
+
     IceCandidate_t* localCandidates[ KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT ];
     IceCandidate_t* remoteCandidates[ KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT ];
-    IceServer_t* iceServers[ MAX_ICE_SERVERS_COUNT ];
-    uint32_t iceServersCount;
     IceCandidatePair_t* iceCandidatePairs[ KVS_ICE_MAX_CANDIDATE_PAIR_COUNT ];
     uint32_t isControlling;
     uint64_t tieBreaker;
