@@ -7,6 +7,9 @@
 
 #define ICE_CANDIDATE_ID_LEN                                    8
 
+#define DEFAULT_MAX_STORED_TRANSACTION_ID_COUNT                 20
+#define MAX_STORED_TRANSACTION_ID_COUNT                         100
+
 #define KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT                       100
 #define KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT                      100
 #define KVS_ICE_MAX_CANDIDATE_PAIR_COUNT                        1024
@@ -53,9 +56,9 @@ typedef enum {
 typedef enum {
     ICE_CANDIDATE_PAIR_STATE_FROZEN = 0,
     ICE_CANDIDATE_PAIR_STATE_WAITING = 1,
-    ICE_CANDIDATE_PAIR_STATE_IN_PROGRESS = 2,
-    ICE_CANDIDATE_PAIR_STATE_SUCCEEDED = 3,
-    ICE_CANDIDATE_PAIR_STATE_FAILED = 4,
+    ICE_CANDIDATE_PAIR_STATE_VALID = 2,
+    ICE_CANDIDATE_PAIR_STATE_NOMINATED = 3,
+    ICE_CANDIDATE_PAIR_STATE_FAILED = 4
 } IceCandidatePairState_t;
 
 typedef enum {
@@ -77,11 +80,16 @@ typedef enum IceResult
 
 /* ICE component structures */
 
-typedef struct IceIPAddress
+typedef struct IPAddress
 {
     uint16_t family;
     uint16_t port;
     uint8_t address[16];
+} IPAddress_t;
+
+typedef struct IceIPAddress
+{
+    IPAddress_t ipAddress;
     uint32_t isPointToPoint;
 } IceIPAddress_t;
 
@@ -118,9 +126,9 @@ typedef struct IceCandidatePair
 {
     IceCandidate_t* local;
     IceCandidate_t* remote;
-    uint32_t nominated;
     uint64_t priority;
     IceCandidatePairState_t state;
+    uint8_t connectivityChecks; // checking for completion of 4-way handshake
 } IceCandidatePair_t;
 
 typedef struct IceAgent
