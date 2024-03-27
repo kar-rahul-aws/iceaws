@@ -481,19 +481,6 @@ IceResult_t Ice_createResponseForRequest( StunContext_t * pStunCtx, IceAgent_t *
 }
 /*------------------------------------------------------------------------------------------------------------------*/
 
-/* Ice_handleStunResponse - This API handles the processing of Stun Response. */
-
-Ice_handleStunResponse( StunContext_t * pStunCtx )
-{
-    IceResult_t retStatus = ICE_RESULT_OK;
-    
-    
-    
-    return retStatus;
-}
-
-/*------------------------------------------------------------------------------------------------------------------*/
-
 /* Ice_InsertLocalCandidate - Adds a candidate into the array of local candidates. */
 
 IceResult_t Ice_InsertLocalCandidate( IceAgent_t * pIceAgent, IceCandidate_t * pCandidate )
