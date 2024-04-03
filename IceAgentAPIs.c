@@ -166,6 +166,7 @@ IceResult_t Ice_createCandidatePair( IceAgent_t * pIceAgent, IceCandidate_t * pL
             pIceCandidatePair->remote = pRemoteCandidate;
             pIceCandidatePair->state = ICE_CANDIDATE_PAIR_STATE_WAITING;
             pIceCandidatePair->priority = Ice_computeCandidatePairPriority(pIceCandidatePair, pIceAgent->isControlling);
+            pIceCandidatePair->connectivityChecks = 0;
         }
 
         Ice_insertCandidatePair( pIceAgent, pIceCandidatePair, iceCandidatePairCount );
@@ -202,7 +203,7 @@ void Ice_insertCandidatePair( IceAgent_t * pIceAgent, IceCandidatePair_t * pIceC
 
 /* Ice_updateSrflxCandidateAddress : This API will be called by processStunPacket, if the binding request is for finding srflx candidate to update the candidate address */
 
-IceResult_t Ice_updateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate_t * pCandidate, const IceIPAddress_t * pIpAddr, IceCandidatePair_t * pIceCandidatePair )
+IceResult_t Ice_updateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate_t * pCandidate, const IceIPAddress_t * pIpAddr )
 {
     IceResult_t retStatus = ICE_RESULT_OK;
     int i;
@@ -217,7 +218,7 @@ IceResult_t Ice_updateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate
 
     for( i = 0; ( ( i < Ice_GetValidRemoteCandidateCount( pIceAgent ) ) && ( retStatus == ICE_RESULT_OK ) ) ; i++ )
     {
-        retStatus = Ice_createCandidatePair( pIceAgent, pCandidate, pIceAgent->remoteCandidates[ i ], pIceCandidatePair );
+        retStatus = Ice_createCandidatePair( pIceAgent, pCandidate, pIceAgent->remoteCandidates[ i ] );
     }
     
     return retStatus;
@@ -232,14 +233,14 @@ IceResult_t Ice_updateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate
  *   3. During nomination - USE_CANDIDATE flag
  *   4. Send Response to Remote Candidates
  */
-IceResult_t Ice_InitializeStunPacket( StunContext_t * pStunCtx, uint8_t * transactionId, 
+IceResult_t Ice_InitializeStunPacket( StunContext_t * pStunCxt, uint8_t * transactionId, 
                                       uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader,
                                       uint8_t isGenerateTransactionID, uint8_t isStunBindingRequest )
 {
     IceResult_t retStatus = ICE_RESULT_OK;
     int i;
 
-    if( pStunCtx == NULL || pStunHeader == NULL || pStunMessageBuffer == NULL )
+    if( pStunCxt == NULL || pStunHeader == NULL || pStunMessageBuffer == NULL )
     {
         retStatus = ICE_RESULT_BAD_PARAM;
     }
@@ -274,10 +275,10 @@ IceResult_t Ice_InitializeStunPacket( StunContext_t * pStunCtx, uint8_t * transa
     }
     
     /* Create a STUN message. */
-    retStatus = StunSerializer_Init( &( pStunCtx ),
-                                     &( pStunMessageBuffer[ 0 ] ),
-                                     1024, //Keeping the static size = 1024 , for now, if required, it can be made dynamic as well.
-                                     &( pStunHeader ) );
+    retStatus = StunSerializer_Init(  pStunCxt ,
+                                      pStunMessageBuffer,
+                                      1024, //Keeping the static size = 1024 , for now, if required, it can be made dynamic as well.
+                                      pStunHeader );
 
     return retStatus;
 }
@@ -340,7 +341,7 @@ IceResult_t Ice_packageStunPacket( StunContext_t * pStunCxt, uint8_t * password,
 IceResult_t Ice_createRequestForSrflxCandidate( IceAgent_t * pIceAgent, StunContext_t * pStunCxt, 
                                                 uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader )
 {
-    IceResult_t retStatus = ICE_RESULT_OK;    
+    IceResult_t retStatus = ICE_RESULT_OK;
 
     retStatus = Ice_InitializeStunPacket( pStunCxt, NULL, pStunMessageBuffer, pStunHeader, 1, 1 );
     
@@ -356,7 +357,7 @@ IceResult_t Ice_createRequestForSrflxCandidate( IceAgent_t * pIceAgent, StunCont
 
 /*------------------------------------------------------------------------------------------------------------------*/
 
-/* Ice_createRequestForNomination - This API creates Stun Packet for nomination of the valid candidate Pair. */
+/* Ice_createRequestForNominatingValidCandidate - This API creates Stun Packet for nomination of the valid candidate Pair. */
 
 IceResult_t Ice_createRequestForNominatingValidCandidate( StunContext_t * pStunCtx, IceAgent_t * pIceAgent, 
                                                           uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader,
@@ -398,7 +399,7 @@ IceResult_t Ice_createRequestForNominatingValidCandidate( StunContext_t * pStunC
 
 /*------------------------------------------------------------------------------------------------------------------*/
 
-/* Ice_createRequestForNomination - This API creates Stun Packet for nomination of the valid candidate Pair. */
+/* Ice_createRequestForConnectivityCheck - This API creates Stun Packet for connectivity check to the remote candidate . */
 
 IceResult_t Ice_createRequestForConnectivityCheck( StunContext_t * pStunCtx, IceAgent_t * pIceAgent,
                                                    uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader )
@@ -440,7 +441,7 @@ IceResult_t Ice_createRequestForConnectivityCheck( StunContext_t * pStunCtx, Ice
 
 /*------------------------------------------------------------------------------------------------------------------*/
 
-/* Ice_createRequestForNomination - This API creates Stun Packet for nomination of the valid candidate Pair. */
+/* Ice_createResponseForRequest - This API creates Stun Packet for response to a Stun Binding Request. */
 
 IceResult_t Ice_createResponseForRequest( StunContext_t * pStunCtx, IceAgent_t * pIceAgent,
                                           uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader,
@@ -479,6 +480,180 @@ IceResult_t Ice_createResponseForRequest( StunContext_t * pStunCtx, IceAgent_t *
     return retStatus;
 
 }
+/*------------------------------------------------------------------------------------------------------------------*/
+
+
+IceResult_t Ice_DeserializeStunPacket( StunContext_t * pStunCtx, StunAttribute_t * pStunAttribute )
+{
+    IceResult_t retStatus = ICE_RESULT_OK;
+    
+    while( retStatus == ICE_RESULT_OK )
+    {
+        retStatus = StunDeserializer_GetNextAttribute( pStunCtx, pStunAttribute );
+        
+        if( retStatus == ICE_RESULT_OK )
+        {
+            switch( pStunAttribute->attributeType )
+            {
+                case STUN_ATTRIBUTE_TYPE_XOR_MAPPED_ADDRESS:
+                {
+                    retStatus |= ICE_RESULT_UPDATE_SRFLX_CANDIDATE;
+                }
+                break;
+                case STUN_ATTRIBUTE_TYPE_USE_CANDIDATE:
+                {
+                    retStatus |= ICE_RESULT_USE_CANDIDATE_FLAG;
+                }
+                break;
+                default:
+                    break;
+            }
+        }
+    }
+    return retStatus;
+}
+
+
+/*
+    +-----+-----+-----+-----+-----+
+    |     | BIT3| BIT2| BIT1| BIT0|
+    +-----+-----+-----+-----+-----+
+    
+    This depicts the connectivityChecks in a candidate pair, these 4 bits show which bit stands for which STUN request/ response.
+    
+     1. BIT0 - STUN request from local candidate to remote candidate.
+     2. BIT1 - STUN response from remote candidate to local candidate.
+     3. BIT2 - STUN request from remote candidate to local candidate.
+     4. BIT3 - STUN response from local candidate to remote candidate.
+
+*/
+
+/* Ice_handleStunResponse - This API handles the processing of Stun Response. */
+
+IceResult_t Ice_handleStunResponse( StunContext_t * pStunCtx , IceAgent_t * pIceAgent, StunAttribute_t * pStunAttribute,
+                                    uint8_t * pStunMessageBuffer, uint8_t pStunMessageBufferLength, StunAttributeAddress_t * pStunAttributeAddress,
+                                    IceCandidate_t * pLocalCandidate , IceIPAddress_t * pSrcAddr,
+                                    StunHeader_t * pStunHeader, IceCandidatePair_t * pIceCandidatePair )
+{
+    IceResult_t retStatus = ICE_RESULT_OK;
+    
+    if( pIceAgent == NULL || pStunCtx == NULL || pStunMessageBuffer == NULL || pStunHeader == NULL )
+    {
+        retStatus = ICE_RESULT_BAD_PARAM;
+    }
+    
+    /* Initialize STUN context for deserializing. */
+    retStatus = StunDeserializer_Init( pStunCtx, pStunMessageBuffer, pStunMessageBufferLength, pStunHeader );
+    
+    if( retStatus == ICE_RESULT_OK )
+    {
+        retStatus = Ice_DeserializeStunPacket( pStunCtx, pStunAttribute );
+    }
+    
+    switch( pStunHeader->messageType )
+    {
+        case STUN_PACKET_TYPE_BINDING_REQUEST:
+        
+            /* Check if received candidate with USE_CANDIDATE FLAG */
+            if( ( retStatus & ( 1 << ICE_RESULT_USE_CANDIDATE_FLAG ) && ( ( pIceCandidatePair->connectivityChecks ^ ICE_CONNECTIVITY_SUCCESS_FLAG ) == 0 ) ) )
+            {
+                printf( "received candidate with USE_CANDIDATE flag.\n" );
+                pIceCandidatePair->state = ICE_CANDIDATE_PAIR_STATE_NOMINATED;
+                retStatus = Ice_createResponseForRequest( pStunCtx, pIceAgent, pStunMessageBuffer, pStunHeader, pSrcAddr );
+            }
+            else
+            {
+                pIceCandidatePair->connectivityChecks |= 1<<2;
+
+                /* Create a response from local to remote candidate. */
+                retStatus = Ice_createResponseForRequest( pStunCtx, pIceAgent, pStunMessageBuffer, pStunHeader, pSrcAddr );
+                if( retStatus == ICE_RESULT_OK )
+                {
+                    pIceCandidatePair->connectivityChecks |= 1<<3;
+                    retStatus |= ICE_RESULT_SEND_STUN_LOCAL_REMOTE;
+                }
+                
+                /* Check if we need to add Peer Reflexive candidates. */
+                
+                if( ( pIceCandidatePair->connectivityChecks & 1 ) == 0 )
+                {
+                    /* Create a request from local to remote candidate. */
+                    pIceCandidatePair->connectivityChecks |= 1<<0;
+                    
+                    retStatus = Ice_createRequestForConnectivityCheck( pStunCtx, pIceAgent, pStunMessageBuffer, pStunHeader );
+                    if( retStatus == ICE_RESULT_OK )
+                    {
+                        retStatus |= ICE_RESULT_SEND_STUN_REQUEST_RESPONSE;
+                    }
+
+                }
+            }
+        case STUN_PACKET_TYPE_BINDING_RESPONSE_SUCCESS:
+        
+            if( Ice_transactionIdStoreHasId( pIceAgent->pStunBindingRequestTransactionIdStore, pStunMessageBuffer + STUN_PACKET_TRANSACTION_ID_OFFSET ) )
+            {
+                retStatus = Ice_HandleServerReflexiveCandidateResponse( pIceAgent, pStunMessageBuffer, pStunMessageBufferLength, pStunHeader, pLocalCandidate );
+                
+                if( retStatus == ICE_RESULT_OK )
+                {
+                    Ice_transactionIdStoreRemove( pIceAgent->pStunBindingRequestTransactionIdStore, pStunMessageBuffer + STUN_PACKET_TRANSACTION_ID_OFFSET );
+                }
+            }
+            else
+            {
+                pIceCandidatePair->connectivityChecks |= 1<<1;
+                
+                if( ( pIceCandidatePair->connectivityChecks ^ ICE_CONNECTIVITY_SUCCESS_FLAG ) == 0 )
+                {
+                    if( pIceCandidatePair->state == ICE_CANDIDATE_PAIR_STATE_NOMINATED )
+                    {
+                        pIceCandidatePair->state = ICE_CANDIDATE_PAIR_STATE_SUCCEEDED;
+                        retStatus |= ICE_RESULT_CANDIDATE_PAIR_READY;
+                    }
+                    else
+                    {
+                        pIceCandidatePair->state = ICE_CANDIDATE_PAIR_STATE_VALID;
+                        retStatus |= ICE_RESULT_START_NOMINATION;
+                    }
+                }
+            }
+            
+            break;
+        default:
+            printf( "Stun packet received is neither a Binding Request nor a Response.\n");
+            break;
+    }
+    return retStatus;
+}
+
+/*------------------------------------------------------------------------------------------------------------------*/
+
+/* Ice_HandleServerReflexiveCandidateResponse - 1. Parse STUN Binding Response from the STUN server to get Server Reflexive candidate.
+                                                2. Add the Server Reflexive candidate to the ICE Library. */
+
+IceResult_t Ice_HandleServerReflexiveCandidateResponse( IceAgent * pIceAgent, StunAttribute_t * pStunAttribute,
+                                                        StunAttributeAddress_t * pStunMappedAddress, StunHeader_t * pStunHeader,
+                                                        IceCandidate_t * pLocalCandidate )
+{
+    IceResult_t retStatus = ICE_RESULT_OK;
+    IceIPAddress_t * ipAddr;
+
+    retStatus = StunDeserializer_ParseAttributeXORMappedAddress( pStunAttribute, pStunMappedAddress, pStunHeader->transactionId );
+    
+    if( retStatus == ICE_RESULT_OK )
+    {
+        ipAddr->ipAddress = ( IPAddress_t * )( pStunMappedAddress->address );
+        ipAddr->isPointToPoint = 0;
+
+        retStatus = Ice_updateSrflxCandidateAddress( pIceAgent, pLocalCandidate, ipAddr );
+    }
+
+    return retStatus;
+}
+/*------------------------------------------------------------------------------------------------------------------*/
+
+
+
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_InsertLocalCandidate - Adds a candidate into the array of local candidates. */
@@ -630,7 +805,7 @@ uint64_t Ice_computeCandidatePairPriority( IceCandidatePair_t * pIceCandidatePai
 
 /* Ice_createTransactionIdStore - Creates the Transaction ID Store. */
 
-IceResult_t Ice_createTransactionIdStore(uint32_t maxIdCount, TransactionIdStore_t * pTransactionIdStore)
+static IceResult_t Ice_createTransactionIdStore(uint32_t maxIdCount, TransactionIdStore_t * pTransactionIdStore)
 {
     IceResult_t retStatus = ICE_RESULT_OK;
 
@@ -652,7 +827,7 @@ IceResult_t Ice_createTransactionIdStore(uint32_t maxIdCount, TransactionIdStore
 
 /* Ice_transactionIdStoreInsert - Inserts the Transaction in the IceAgent Transaction ID Store. */
 
-void Ice_transactionIdStoreInsert(TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId)
+static void Ice_transactionIdStoreInsert(TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId)
 {
     uint8_t * storeLocation = NULL;
     uint32_t transactionIDCount ;
@@ -677,3 +852,22 @@ void Ice_transactionIdStoreInsert(TransactionIdStore_t * pTransactionIdStore, ui
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
+
+/* Ice_transactionIdStoreHasId - Checks if the transaction is present in the Transaction ID Store. */
+
+static bool Ice_transactionIdStoreHasId( TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId )
+{
+    bool idFound = false;
+    int i, j;
+
+    if( pTransactionIdStore != NULL )
+    {
+        for (i = pTransactionIdStore->earliestTransactionIdIndex, j = 0; j < pTransactionIdStore->maxTransactionIdsCount && !idFound; ++j) {
+            if ( memcmp( transactionId, pTransactionIdStore->transactionIds + i * STUN_TRANSACTION_ID_LEN, STUN_TRANSACTION_ID_LEN ) == 0) {
+                idFound = true;
+            }
+            i = (i + 1) % pTransactionIdStore->maxTransactionIdsCount;
+        }
+    }
+    return idFound;
+}
