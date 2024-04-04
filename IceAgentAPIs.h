@@ -41,6 +41,16 @@
 #define MAX_ICE_CONFIG_URI_LEN                                  256
 
 
+#define IS_IPV4_ADDR(pAddress)          ((pAddress)->family == KVS_IP_FAMILY_TYPE_IPV4)
+// Byte sizes of the IP addresses
+#define IPV6_ADDRESS_LENGTH                                     (uint16_t) 16
+#define IPV4_ADDRESS_LENGTH                                     (uint16_t) 4
+
+typedef enum {
+    KVS_IP_FAMILY_TYPE_IPV4 = (uint16_t) 0x0001,
+    KVS_IP_FAMILY_TYPE_IPV6 = (uint16_t) 0x0002,
+} KVS_IP_FAMILY_TYPE;
+
 typedef enum {
     ICE_CANDIDATE_TYPE_HOST = 0,
     ICE_CANDIDATE_TYPE_PEER_REFLEXIVE = 1,
