@@ -1,9 +1,12 @@
-#ifndef ICE_AGENT_APIS_H
-#define ICE_AGENT_APIS_H
+#ifndef ICE_DATA_TYPES_H
+#define ICE_DATA_TYPES_H
 
 /* Standard includes. */
 #include <stdint.h>
 #include <stddef.h>
+
+/* Stun includes. */
+#include "stun_data_types.h"
 
 #define ICE_CANDIDATE_ID_LEN                                    8
 #define ICE_CONNECTIVITY_SUCCESS_FLAG                           15
@@ -11,10 +14,10 @@
 #define DEFAULT_MAX_STORED_TRANSACTION_ID_COUNT                 20
 #define MAX_STORED_TRANSACTION_ID_COUNT                         100
 
-#define KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT                       100
-#define KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT                      100
-#define KVS_ICE_MAX_CANDIDATE_PAIR_COUNT                        1024
-#define MAX_ICE_SERVERS_COUNT                                   21
+#define ICE_MAX_LOCAL_CANDIDATE_COUNT                       100
+#define ICE_MAX_REMOTE_CANDIDATE_COUNT                      100
+#define ICE_MAX_CANDIDATE_PAIR_COUNT                        1024
+#define MAX_ICE_SERVERS_COUNT                               21
 
 /* ICE candidate priorities */
 #define ICE_PRIORITY_HOST_CANDIDATE_TYPE_PREFERENCE             126
@@ -41,21 +44,13 @@
 #define MAX_ICE_CONFIG_URI_LEN                                  256
 
 
-#define IS_IPV4_ADDR(pAddress)          ((pAddress)->family == KVS_IP_FAMILY_TYPE_IPV4)
-// Byte sizes of the IP addresses
-#define IPV6_ADDRESS_LENGTH                                     (uint16_t) 16
-#define IPV4_ADDRESS_LENGTH                                     (uint16_t) 4
+#define IS_IPV4_ADDR(pAddress)                               ( (pAddress)->family == STUN_ADDRESS_IPv4 )
 
 typedef enum {
-    KVS_IP_FAMILY_TYPE_IPV4 = (uint16_t) 0x0001,
-    KVS_IP_FAMILY_TYPE_IPV6 = (uint16_t) 0x0002,
-} KVS_IP_FAMILY_TYPE;
-
-typedef enum {
-    ICE_CANDIDATE_TYPE_HOST = 0,
-    ICE_CANDIDATE_TYPE_PEER_REFLEXIVE = 1,
-    ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE = 2,
-    ICE_CANDIDATE_TYPE_RELAYED = 3,
+    ICE_CANDIDATE_TYPE_HOST,
+    ICE_CANDIDATE_TYPE_PEER_REFLEXIVE,
+    ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE,
+    ICE_CANDIDATE_TYPE_RELAYED,
 } IceCandidateType_t;
 
 typedef enum {
@@ -65,17 +60,17 @@ typedef enum {
 } IceCandidateState_t;
 
 typedef enum {
-    ICE_CANDIDATE_PAIR_STATE_FROZEN = 0,
-    ICE_CANDIDATE_PAIR_STATE_WAITING = 1,
-    ICE_CANDIDATE_PAIR_STATE_VALID = 2,
-    ICE_CANDIDATE_PAIR_STATE_NOMINATED = 3,
-    ICE_CANDIDATE_PAIR_STATE_SUCCEEDED = 4
+    ICE_CANDIDATE_PAIR_STATE_FROZEN,
+    ICE_CANDIDATE_PAIR_STATE_WAITING,
+    ICE_CANDIDATE_PAIR_STATE_VALID,
+    ICE_CANDIDATE_PAIR_STATE_NOMINATED,
+    ICE_CANDIDATE_PAIR_STATE_SUCCEEDED
 } IceCandidatePairState_t;
 
 typedef enum {
     ICE_SOCKET_PROTOCOL_NONE,
     ICE_SOCKET_PROTOCOL_TCP,
-    ICE_SOCKET_PROTOCOL_UDP,
+    ICE_SOCKET_PROTOCOL_UDP
 } IceSocketProtocol_t;
 
 typedef enum IceResult
@@ -98,16 +93,9 @@ typedef enum IceResult
 
 /* ICE component structures */
 
-typedef struct IPAddress
-{
-    uint16_t family;
-    uint16_t port;
-    uint8_t address[16];
-} IPAddress_t;
-
 typedef struct IceIPAddress
 {
-    IPAddress_t ipAddress;
+    StunAttributeAddress_t ipAddress;
     uint32_t isPointToPoint;
 } IceIPAddress_t;
 
@@ -156,13 +144,10 @@ typedef struct IceAgent
     char remoteUsername[MAX_ICE_CONFIG_USER_NAME_LEN + 1];
     char remotePassword[MAX_ICE_CONFIG_CREDENTIAL_LEN + 1];
     char combinedUserName[(MAX_ICE_CONFIG_USER_NAME_LEN + 1) << 1];
-
-    IceCandidate_t* localCandidates[ KVS_ICE_MAX_LOCAL_CANDIDATE_COUNT ];
-    IceCandidate_t* remoteCandidates[ KVS_ICE_MAX_REMOTE_CANDIDATE_COUNT ];
-    IceCandidatePair_t* iceCandidatePairs[ KVS_ICE_MAX_CANDIDATE_PAIR_COUNT ];
+    IceCandidate_t * localCandidates[ ICE_MAX_LOCAL_CANDIDATE_COUNT ];
+    IceCandidate_t * remoteCandidates[ ICE_MAX_REMOTE_CANDIDATE_COUNT ];
+    IceCandidatePair_t * iceCandidatePairs[ ICE_MAX_CANDIDATE_PAIR_COUNT ];
     uint32_t isControlling;
     uint64_t tieBreaker;
-    TransactionIdStore_t* pStunBindingRequestTransactionIdStore;
+    TransactionIdStore_t * pStunBindingRequestTransactionIdStore;
 } IceAgent_t;
-
-
