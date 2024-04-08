@@ -172,7 +172,7 @@ IceResult_t Ice_CheckPeerReflexiveCandidate( IceAgent_t * pIceAgent, IceIPAddres
     IceResult_t retStatus = ICE_RESULT_OK;
     IceCandidate_t * pCandidate = NULL;
 
-    pCandidate = Ice_FindCandidateFromIp( pIceAgent, pIpAddr, 1 );
+    pCandidate = Ice_FindCandidateFromIp( pIceAgent, &pIpAddr, 1 );
     if( pCandidate != NULL )
     {
         retStatus = Ice_AddRemoteCandidate( pIceAgent, ICE_CANDIDATE_TYPE_PEER_REFLEXIVE, pIpAddr, 0, priority );
@@ -249,7 +249,7 @@ void Ice_InsertCandidatePair( IceAgent_t * pIceAgent, IceCandidatePair_t * pIceC
 
 /*------------------------------------------------------------------------------------------------------------------*/
 
-/* Ice_updateSrflxCandidateAddress : This API will be called by processStunPacket, if the binding request is for finding srflx candidate to update the candidate address */
+/* Ice_UpdateSrflxCandidateAddress : This API will be called by processStunPacket, if the binding request is for finding srflx candidate to update the candidate address */
 
 IceResult_t Ice_UpdateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate_t * pCandidate, const IceIPAddress_t * pIpAddr )
 {
@@ -440,7 +440,7 @@ IceResult_t Ice_CreateRequestForNominatingValidCandidatePair( IceAgent_t * pIceA
 
     if( retStatus == ICE_RESULT_OK )
     {
-        retStatus = Ice_packageStunPacket( &pStunCxt, ( uint8_t * ) pIceAgent->remotePassword, ( uint32_t ) strlen( pIceAgent->remotePassword ) * sizeof( char ) );
+        retStatus = Ice_PackageStunPacket( &pStunCxt, ( uint8_t * ) pIceAgent->remotePassword, ( uint32_t ) strlen( pIceAgent->remotePassword ) * sizeof( char ) );
     }
 
     return retStatus;
@@ -483,7 +483,7 @@ IceResult_t Ice_CreateRequestForConnectivityCheck( IceAgent_t * pIceAgent, uint8
     
     if( retStatus == ICE_RESULT_OK )
     {
-        retStatus = Ice_packageStunPacket( &pStunCxt, ( uint8_t * ) pIceAgent->remotePassword, ( uint32_t ) strlen( pIceAgent->remotePassword ) * sizeof( char ) );
+        retStatus = Ice_PackageStunPacket( &pStunCxt, ( uint8_t * ) pIceAgent->remotePassword, ( uint32_t ) strlen( pIceAgent->remotePassword ) * sizeof( char ) );
     }
 
     return retStatus;
@@ -527,7 +527,7 @@ IceResult_t Ice_CreateResponseForRequest( IceAgent_t * pIceAgent, uint8_t * pStu
         
     if( retStatus == ICE_RESULT_OK )
     {
-        retStatus = Ice_packageStunPacket( &pStunCxt, ( uint8_t * ) pIceAgent->localPassword, ( uint32_t ) strlen( pIceAgent->localPassword ) * sizeof( char ) );
+        retStatus = Ice_PackageStunPacket( &pStunCxt, ( uint8_t * ) pIceAgent->localPassword, ( uint32_t ) strlen( pIceAgent->localPassword ) * sizeof( char ) );
     }
 
     return retStatus;
@@ -655,7 +655,7 @@ IceResult_t Ice_HandleStunResponse( IceAgent_t * pIceAgent, uint8_t * pStunMessa
                         /* Create a request from local to remote candidate. */
                         pIceCandidatePair->connectivityChecks |= 1<<0;
 
-                        retStatus = Ice_createRequestForConnectivityCheck( &pStunCxt, pIceAgent, pStunMessageBuffer, &pStunHeader );
+                        retStatus = Ice_CreateRequestForConnectivityCheck( &pStunCxt, pIceAgent, pStunMessageBuffer, &pStunHeader );
                         if( retStatus == ICE_RESULT_OK )
                         {
                             retStatus = ICE_RESULT_SEND_STUN_REQUEST_RESPONSE;
@@ -667,9 +667,9 @@ IceResult_t Ice_HandleStunResponse( IceAgent_t * pIceAgent, uint8_t * pStunMessa
             
                 if( Ice_TransactionIdStoreHasId( pIceAgent->pStunBindingRequestTransactionIdStore, pStunMessageBuffer + STUN_HEADER_TRANSACTION_ID_OFFSET ) )
                 {
-                    if( retStatus & ( 1 << ICE_RESULT_UPDATE_SRFLX_CANDIDATE ) )
+                    if( retStatus == ICE_RESULT_UPDATE_SRFLX_CANDIDATE )
                     {
-                        retStatus = Ice_HandleServerReflexiveCandidateResponse( pIceAgent, pStunMessageBuffer, pStunMessageBufferLength, &pStunHeader, pLocalCandidate );
+                        retStatus = Ice_HandleServerReflexiveCandidateResponse( pIceAgent, &pStunAttributeAddress, pLocalCandidate );
                         
                         if( retStatus == ICE_RESULT_OK )
                         {
@@ -744,7 +744,7 @@ IceResult_t Ice_HandleServerReflexiveCandidateResponse( IceAgent_t * pIceAgent, 
         ipAddr.ipAddress = *( pStunMappedAddress );
         ipAddr.isPointToPoint = 0;
 
-        retStatus = Ice_updateSrflxCandidateAddress( pIceAgent, pLocalCandidate, ipAddr );
+        retStatus = Ice_UpdateSrflxCandidateAddress( pIceAgent, pLocalCandidate, &ipAddr );
     }
 
     return retStatus;
@@ -772,7 +772,6 @@ IceResult_t Ice_InsertLocalCandidate( IceAgent_t * pIceAgent, IceCandidate_t * p
 
     return retStatus;
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_InsertRemoteCandidate - Adds a candidate into the array of remote candidates */
@@ -796,7 +795,6 @@ IceResult_t Ice_InsertRemoteCandidate( IceAgent_t * pIceAgent, IceCandidate_t * 
 
     return retStatus;
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_GetValidLocalCandidateCount - Get valid Local Candidate count */
@@ -813,7 +811,6 @@ int Ice_GetValidLocalCandidateCount( IceAgent_t * pIceAgent )
     }
     return ( i + 1 );
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_GetValidRemoteCandidateCount - Get valid Remote Candidate count */
@@ -830,7 +827,6 @@ int Ice_GetValidRemoteCandidateCount( IceAgent_t * pIceAgent )
     }
     return ( i + 1 );
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_GetValidCandidatePairCount - Get valid Candidate Pair Count */
@@ -847,7 +843,6 @@ int Ice_GetValidCandidatePairCount( IceAgent_t * pIceAgent )
     }
     return ( i + 1 );
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_ComputeCandidatePriority - Compute the candidate priority */
@@ -877,7 +872,6 @@ static uint32_t Ice_ComputeCandidatePriority( IceCandidate_t * pIceCandidate )
 
     return ( (1 << 24) * (typePreference) + (1 << 8) * (localPreference) + 255 );
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_ComputeCandidatePairPriority - Compute the candidate pair priority. */
@@ -895,7 +889,6 @@ static uint64_t Ice_ComputeCandidatePairPriority( IceCandidatePair_t * pIceCandi
     return ( ((uint64_t) 1 << 32) * ( controllingAgentCandidatePri >= controlledAgentCandidatePri ? controlledAgentCandidatePri : controllingAgentCandidatePri ) +
         2 * ( controllingAgentCandidatePri >= controlledAgentCandidatePri ? controllingAgentCandidatePri : controlledAgentCandidatePri ) + (controllingAgentCandidatePri > controlledAgentCandidatePri ? 1 : 0) );
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_CreateTransactionIdStore - Creates the Transaction ID Store. */
@@ -917,7 +910,6 @@ static IceResult_t Ice_CreateTransactionIdStore(uint32_t maxIdCount, Transaction
 
     return retStatus;
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_TransactionIdStoreInsert - Inserts the Transaction in the IceAgent Transaction ID Store. */
@@ -944,7 +936,6 @@ static void Ice_TransactionIdStoreInsert(TransactionIdStore_t * pTransactionIdSt
 
     pTransactionIdStore->transactionIdCount = transactionIDCount;
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_TransactionIdStoreHasId - Checks if the transaction is present in the Transaction ID Store. */
@@ -965,7 +956,6 @@ static bool Ice_TransactionIdStoreHasId( TransactionIdStore_t * pTransactionIdSt
     }
     return idFound;
 }
-
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /* Ice_TransactionIdStoreRemove - Inserts the Transaction in the IceAgent Transaction ID Store. */
