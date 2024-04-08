@@ -1,4 +1,6 @@
 #include "ice_api.h"
+
+/* STUN defines. */
 #include "stun_data_types.h"
 #include "stun_serializer.h"
 #include "stun_deserializer.h"
@@ -9,7 +11,7 @@
 #include <string.h>
 
 
-/* Ice_createIceAgent - The application calls this API for starting a new ICE agent. */
+/* Ice_CreateIceAgent - The application calls this API for starting a new ICE agent. */
 
 IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername, 
                                 char * localPassword, char * remoteUsername, 
@@ -33,7 +35,7 @@ IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername,
         pIceAgent->tieBreaker = ( uint64_t ) rand(); //required as an attribute for STUN packet
         
         pIceAgent->pStunBindingRequestTransactionIdStore = pBuffer;
-        retStatus = Ice_createTransactionIdStore(DEFAULT_MAX_STORED_TRANSACTION_ID_COUNT, &pIceAgent->pStunBindingRequestTransactionIdStore);
+        retStatus = Ice_CreateTransactionIdStore( DEFAULT_MAX_STORED_TRANSACTION_ID_COUNT, pIceAgent->pStunBindingRequestTransactionIdStore );
     }
 
     return retStatus;
@@ -103,7 +105,7 @@ IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIc
         pCandidate->state = ICE_CANDIDATE_STATE_NEW;
         pCandidate->priority = Ice_ComputeCandidatePriority(pCandidate);
 
-        retStatus = Ice_createRequestForSrflxCandidate( pIceAgent, &pStunCxt, pStunMessageBuffer, &pStunHeader );
+        retStatus = Ice_CreateRequestForSrflxCandidate( pIceAgent, pStunMessageBuffer );
 
         if( retStatus == ICE_RESULT_OK )
         {
@@ -266,7 +268,7 @@ IceResult_t Ice_UpdateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate
 
     for( i = 0; ( ( i < Ice_GetValidRemoteCandidateCount( pIceAgent ) ) && ( retStatus == ICE_RESULT_OK ) ) ; i++ )
     {
-        retStatus = Ice_createCandidatePair( pIceAgent, pCandidate, pIceAgent->remoteCandidates[ i ] );
+        retStatus = Ice_CreateCandidatePair( pIceAgent, pCandidate, pIceAgent->remoteCandidates[ i ] );
     }
 
     return retStatus;
@@ -399,9 +401,9 @@ IceResult_t Ice_CreateRequestForSrflxCandidate( IceAgent_t * pIceAgent, uint8_t 
 
     if( retStatus == ICE_RESULT_OK )
     {
-        Ice_transactionIdStoreInsert( pIceAgent->pStunBindingRequestTransactionIdStore, pStunHeader.pTransactionId );
+        Ice_TransactionIdStoreInsert( pIceAgent->pStunBindingRequestTransactionIdStore, pStunHeader.pTransactionId );
 
-        retStatus = Ice_packageStunPacket( &pStunCxt, NULL, 0 );
+        retStatus = Ice_PackageStunPacket( &pStunCxt, NULL, 0 );
     }
 
     return retStatus;
@@ -920,22 +922,23 @@ static void Ice_TransactionIdStoreInsert(TransactionIdStore_t * pTransactionIdSt
     uint8_t * storeLocation = NULL;
     uint32_t transactionIDCount ;
 
-    CHECK( pTransactionIdStore != NULL );
+    if( pTransactionIdStore != NULL )
+    {
+        storeLocation = pTransactionIdStore->transactionIds +( ( pTransactionIdStore->nextTransactionIdIndex % pTransactionIdStore->maxTransactionIdsCount ) * STUN_HEADER_TRANSACTION_ID_LENGTH );
+        memcpy( storeLocation, transactionId, STUN_HEADER_TRANSACTION_ID_LENGTH );
 
-    storeLocation = pTransactionIdStore->transactionIds +( ( pTransactionIdStore->nextTransactionIdIndex % pTransactionIdStore->maxTransactionIdsCount ) * STUN_HEADER_TRANSACTION_ID_LENGTH );
-    memcpy( storeLocation, transactionId, STUN_HEADER_TRANSACTION_ID_LENGTH );
+        pTransactionIdStore->nextTransactionIdIndex = ( pTransactionIdStore->nextTransactionIdIndex + 1 ) % pTransactionIdStore->maxTransactionIdsCount;
 
-    pTransactionIdStore->nextTransactionIdIndex = ( pTransactionIdStore->nextTransactionIdIndex + 1 ) % pTransactionIdStore->maxTransactionIdsCount;
+        if ( pTransactionIdStore->nextTransactionIdIndex == pTransactionIdStore->earliestTransactionIdIndex ) {
+            pTransactionIdStore->earliestTransactionIdIndex =
+                ( pTransactionIdStore->earliestTransactionIdIndex + 1 ) % pTransactionIdStore->maxTransactionIdsCount;
+            return;
+        }
+        
+        transactionIDCount = ( ( pTransactionIdStore->transactionIdCount + 1 ) > ( pTransactionIdStore->maxTransactionIdsCount ) )?pTransactionIdStore->maxTransactionIdsCount : ( pTransactionIdStore->transactionIdCount + 1 );
 
-    if ( pTransactionIdStore->nextTransactionIdIndex == pTransactionIdStore->earliestTransactionIdIndex ) {
-        pTransactionIdStore->earliestTransactionIdIndex =
-            ( pTransactionIdStore->earliestTransactionIdIndex + 1 ) % pTransactionIdStore->maxTransactionIdsCount;
-        return;
+        pTransactionIdStore->transactionIdCount = transactionIDCount;
     }
-    
-    transactionIDCount = ( ( pTransactionIdStore->transactionIdCount + 1 ) > ( pTransactionIdStore->maxTransactionIdsCount ) )?pTransactionIdStore->maxTransactionIdsCount : ( pTransactionIdStore->transactionIdCount + 1 );
-
-    pTransactionIdStore->transactionIdCount = transactionIDCount;
 }
 /*------------------------------------------------------------------------------------------------------------------*/
 
