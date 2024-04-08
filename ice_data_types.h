@@ -44,7 +44,7 @@
 #define MAX_ICE_CONFIG_URI_LEN                                  256
 
 
-#define IS_IPV4_ADDR(pAddress)                               ( (pAddress)->family == STUN_ADDRESS_IPv4 )
+#define IS_IPV4_ADDR(pAddress)                               ( (pAddress).family == STUN_ADDRESS_IPv4 )
 
 typedef enum {
     ICE_CANDIDATE_TYPE_HOST,
@@ -151,3 +151,5 @@ typedef struct IceAgent
     uint64_t tieBreaker;
     TransactionIdStore_t * pStunBindingRequestTransactionIdStore;
 } IceAgent_t;
+
+#endif /* ICE_DATA_TYPES_H */
