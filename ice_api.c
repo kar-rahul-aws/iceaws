@@ -50,7 +50,7 @@ IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIce
     IceResult_t retStatus = ICE_RESULT_OK;
     IceCandidate_t * pCandidate = NULL;
     int localCandidateCount = Ice_GetValidLocalCandidateCount( pIceAgent );
-    
+
     if( localCandidateCount == ICE_MAX_LOCAL_CANDIDATE_COUNT )
     {
         retStatus = ICE_RESULT_MAX_CANDIDATE_THRESHOLD;
@@ -78,8 +78,7 @@ IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIce
 
 /* Ice_AddSrflxCandidate - The application calls this API for adding Server Reflex candidate. */
 
-IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent,
-                                   IceServer_t * pIceServer, uint8_t * pStunMessageBuffer )
+IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent, uint8_t * pStunMessageBuffer )
 {
     IceResult_t retStatus = ICE_RESULT_OK;
     IceCandidate_t * pCandidate = NULL;
@@ -361,7 +360,7 @@ IceResult_t Ice_PackageStunPacket( StunContext_t * pStunCxt, uint8_t * password,
 
         if( ( pIntBuffer != NULL ) && ( retStatus == ICE_RESULT_OK ) )
         {
-            hmac_function(password, (int32_t) passwordLen, pIntBuffer, bufferLength, messageIntegrity, &hmacLen); //compute HMAC using a function pointer, with the function defined in the application.
+            //hmac_function(password, (int32_t) passwordLen, pIntBuffer, bufferLength, messageIntegrity, &hmacLen); //compute HMAC using a function pointer, with the function defined in the application.
         }
         
         retStatus = StunSerializer_AddAttributeIntegrity(pStunCxt, messageIntegrity, STUN_HMAC_VALUE_LENGTH);
@@ -374,7 +373,7 @@ IceResult_t Ice_PackageStunPacket( StunContext_t * pStunCxt, uint8_t * password,
 
         if( ( pFinBuffer != NULL) && ( retStatus == ICE_RESULT_OK ) )
         {
-            crc32 = crcFunction( pFinBuffer, bufferLength ); //compute CRC using a function pointer, with the function defined in the application.
+            //crc32 = crcFunction( pFinBuffer, bufferLength ); //compute CRC using a function pointer, with the function defined in the application.
         }
         retStatus = StunSerializer_AddAttributeFingerprint( pStunCxt, crc32 );
     }
@@ -382,6 +381,10 @@ IceResult_t Ice_PackageStunPacket( StunContext_t * pStunCxt, uint8_t * password,
     if( retStatus == ICE_RESULT_OK )
     {
         retStatus = StunSerializer_Finalize( pStunCxt, &( stunMessageLength ) );
+        if( retStatus == ICE_RESULT_OK )
+        {
+            printf("\nStun Message Length : %d\n",stunMessageLength);
+        }
     }
     
     return retStatus;
@@ -808,11 +811,11 @@ int Ice_GetValidLocalCandidateCount( IceAgent_t * pIceAgent )
 
     for(i = 0; i < ICE_MAX_LOCAL_CANDIDATE_COUNT; i++ )
     {
-        if( pIceAgent->localCandidates[ i ] == NULL ){
+        if( pIceAgent->localCandidates[ i ]->state == ICE_CANDIDATE_STATE_INVALID ){
             break;
         }
     }
-    return ( i + 1 );
+    return ( i );
 }
 /*------------------------------------------------------------------------------------------------------------------*/
 
@@ -824,11 +827,11 @@ int Ice_GetValidRemoteCandidateCount( IceAgent_t * pIceAgent )
 
     for(i = 0; i < ICE_MAX_REMOTE_CANDIDATE_COUNT; i++ )
     {
-        if( pIceAgent->remoteCandidates[ i ] == NULL ){
+        if( pIceAgent->remoteCandidates[ i ]->state == ICE_CANDIDATE_STATE_INVALID ){
             break;
         }
     }
-    return ( i + 1 );
+    return ( i );
 }
 /*------------------------------------------------------------------------------------------------------------------*/
 
@@ -840,11 +843,11 @@ int Ice_GetValidCandidatePairCount( IceAgent_t * pIceAgent )
 
     for(i = 0; i < ICE_MAX_CANDIDATE_PAIR_COUNT; i++ )
     {
-        if( pIceAgent->iceCandidatePairs[ i ] == NULL ){
+        if( pIceAgent->iceCandidatePairs[ i ]->state == ICE_CANDIDATE_PAIR_STATE_INVALID ){
             break;
         }
     }
-    return ( i + 1 );
+    return ( i );
 }
 /*------------------------------------------------------------------------------------------------------------------*/
 

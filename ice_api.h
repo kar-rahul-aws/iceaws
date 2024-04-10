@@ -20,7 +20,7 @@ IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername, ch
 
 IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent );
 
-IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent, IceServer_t * pIceServer, uint8_t * pStunMessageBuffer );
+IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent, uint8_t * pStunMessageBuffer );
 
 IceResult_t Ice_InsertLocalCandidate( IceAgent_t * pIceAgent, IceCandidate_t * pCandidate );
 

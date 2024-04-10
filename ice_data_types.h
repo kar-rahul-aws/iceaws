@@ -54,12 +54,13 @@ typedef enum {
 } IceCandidateType_t;
 
 typedef enum {
-    ICE_CANDIDATE_STATE_NEW,
-    ICE_CANDIDATE_STATE_VALID,
     ICE_CANDIDATE_STATE_INVALID,
+    ICE_CANDIDATE_STATE_NEW,
+    ICE_CANDIDATE_STATE_VALID
 } IceCandidateState_t;
 
 typedef enum {
+    ICE_CANDIDATE_PAIR_STATE_INVALID,
     ICE_CANDIDATE_PAIR_STATE_FROZEN,
     ICE_CANDIDATE_PAIR_STATE_WAITING,
     ICE_CANDIDATE_PAIR_STATE_VALID,
@@ -153,3 +154,4 @@ typedef struct IceAgent
 } IceAgent_t;
 
 #endif /* ICE_DATA_TYPES_H */
+
