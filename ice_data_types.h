@@ -127,6 +127,7 @@ typedef struct IceCandidate
     IceCandidateState_t state;
     uint32_t priority;
     IceSocketProtocol_t remoteProtocol;
+    char id[ICE_CANDIDATE_ID_LEN + 1];
 } IceCandidate_t;
 
 typedef struct IceCandidatePair
@@ -154,4 +155,3 @@ typedef struct IceAgent
 } IceAgent_t;
 
 #endif /* ICE_DATA_TYPES_H */
-
