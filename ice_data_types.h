@@ -8,7 +8,6 @@
 /* Stun includes. */
 #include "stun_data_types.h"
 
-#define ICE_CANDIDATE_ID_LEN                                    8
 #define ICE_CONNECTIVITY_SUCCESS_FLAG                           15
 
 #define DEFAULT_MAX_STORED_TRANSACTION_ID_COUNT                 20
@@ -127,7 +126,6 @@ typedef struct IceCandidate
     IceCandidateState_t state;
     uint32_t priority;
     IceSocketProtocol_t remoteProtocol;
-    char id[ICE_CANDIDATE_ID_LEN + 1];
 } IceCandidate_t;
 
 typedef struct IceCandidatePair

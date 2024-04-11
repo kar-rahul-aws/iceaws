@@ -49,7 +49,7 @@ IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername,
 
 /* Ice_AddHostCandidate - The application calls this API for adding host candidate. */
 
-IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, const char * id, IceAgent_t * pIceAgent )
+IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent )
 {
     IceResult_t retStatus = ICE_RESULT_OK;
     IceCandidate_t * pCandidate = NULL;
@@ -67,7 +67,6 @@ IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, const char * id, 
     if( retStatus == ICE_RESULT_OK )
     {
         pCandidate->isRemote = 0;
-        strcpy( pCandidate->id , id );
         pCandidate->ipAddress = ipAddr;
         pCandidate->iceCandidateType = ICE_CANDIDATE_TYPE_HOST;
         pCandidate->state = ICE_CANDIDATE_STATE_VALID;
@@ -83,7 +82,7 @@ IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, const char * id, 
 
 /* Ice_AddSrflxCandidate - The application calls this API for adding Server Reflex candidate. */
 
-IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, const char * id, IceAgent_t * pIceAgent, uint8_t * pStunMessageBuffer, uint8_t * pTransactionIdBuffer )
+IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent, uint8_t * pStunMessageBuffer, uint8_t * pTransactionIdBuffer )
 {
     IceResult_t retStatus = ICE_RESULT_OK;
     IceCandidate_t * pCandidate = NULL;
@@ -102,7 +101,6 @@ IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, const char * id,
     if( retStatus == ICE_RESULT_OK )
     {
         pCandidate->isRemote = 0;
-        strcpy( pCandidate->id , id );
         pCandidate->ipAddress = ipAddr;
         pCandidate->iceCandidateType = ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE;
         pCandidate->state = ICE_CANDIDATE_STATE_NEW;
@@ -123,7 +121,7 @@ IceResult_t Ice_AddSrflxCandidate( const IceIPAddress_t ipAddr, const char * id,
 
 /* Ice_AddRemoteCandidate - The application calls this API for adding remote candidates. */
 
-IceResult_t Ice_AddRemoteCandidate( const char * id, IceAgent_t * pIceAgent, IceCandidateType_t iceCandidateType, 
+IceResult_t Ice_AddRemoteCandidate( IceAgent_t * pIceAgent, IceCandidateType_t iceCandidateType, 
                                     const IceIPAddress_t ipAddr, IceSocketProtocol_t remoteProtocol, 
                                     const uint32_t priority )
 {
@@ -145,7 +143,6 @@ IceResult_t Ice_AddRemoteCandidate( const char * id, IceAgent_t * pIceAgent, Ice
     if( retStatus == ICE_RESULT_OK ) 
     {
         pCandidate->isRemote = 1;
-        strcpy( pCandidate->id , id );
         pCandidate->ipAddress = ipAddr;
         pCandidate->state = ICE_CANDIDATE_STATE_VALID;
         pCandidate->priority = priority;
@@ -181,7 +178,7 @@ IceResult_t Ice_CheckPeerReflexiveCandidate( IceAgent_t * pIceAgent, IceIPAddres
     pCandidate = Ice_FindCandidateFromIp( pIceAgent, pIpAddr, 1 );
     if( pCandidate != NULL )
     {
-        retStatus = Ice_AddRemoteCandidate( "peer", pIceAgent, ICE_CANDIDATE_TYPE_PEER_REFLEXIVE, pIpAddr, 0, priority );
+        retStatus = Ice_AddRemoteCandidate( pIceAgent, ICE_CANDIDATE_TYPE_PEER_REFLEXIVE, pIpAddr, 0, priority );
     }
 
     return retStatus;

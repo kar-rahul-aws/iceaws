@@ -50,8 +50,6 @@ void Generate_HostCandidate( IceAgent_t * iceAgent )
     IceResult_t result ;
     StunAttributeAddress_t stunAddress1, stunAddress2;
     IceIPAddress_t iceIpAddress1, iceIpAddress2;
-    
-    char id1[] = "host@1", id2[] = "host@2";
 
     uint8_t ipAddress1V6[] = { 0x20, 0x01, 0x0D, 0xB8, 0x12, 0x34, 0x56, 0x78,
                                 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 }; 
@@ -74,22 +72,22 @@ void Generate_HostCandidate( IceAgent_t * iceAgent )
     iceIpAddress2.ipAddress = stunAddress2;
     iceIpAddress2.isPointToPoint = 1;
     
-    result = Ice_AddHostCandidate( iceIpAddress1, id1, iceAgent );
+    result = Ice_AddHostCandidate( iceIpAddress1, iceAgent );
 
     if( result == ICE_RESULT_OK )
     {
-        printf("Local Candidate %s --> Port : %d\n",iceAgent->localCandidates[ 0 ]->id , iceAgent->localCandidates[ 0 ]->ipAddress.ipAddress.port );
+        printf("Local Candidate --> Port : %d\n", iceAgent->localCandidates[ 0 ]->ipAddress.ipAddress.port );
     }
     else
     {
         printf( "\nAdding host candidate 1 failed\n" );
     }
 
-    result = Ice_AddHostCandidate( iceIpAddress2, id2, iceAgent );
+    result = Ice_AddHostCandidate( iceIpAddress2, iceAgent );
     
     if( result == ICE_RESULT_OK )
     {
-        printf("Local Candidate %s --> Port : %d\n",iceAgent->localCandidates[ 1 ]->id , iceAgent->localCandidates[ 1 ]->ipAddress.ipAddress.port );
+        printf("Local Candidate --> Port : %d\n", iceAgent->localCandidates[ 1 ]->ipAddress.ipAddress.port );
     }
     else
     {
@@ -106,7 +104,6 @@ void Generate_SrflxCandidate( IceAgent_t * iceAgent )
     IceIPAddress_t iceIpAddress;
     uint8_t stunMessageBuffer[ 1024 ] = { 0 };
     int i;
-    char id[] = "srflx@1";
 
     uint8_t ipAddressV6[] = { 0x20, 0x01, 0x0D, 0xB8, 0x12, 0x34, 0x56, 0x78,
                               0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 };
@@ -122,11 +119,11 @@ void Generate_SrflxCandidate( IceAgent_t * iceAgent )
     iceIpAddress.ipAddress = stunAddress;
     iceIpAddress.isPointToPoint = 0;
 
-    result = Ice_AddSrflxCandidate( iceIpAddress, id, iceAgent, stunMessageBuffer, transactionId );
+    result = Ice_AddSrflxCandidate( iceIpAddress, iceAgent, stunMessageBuffer, transactionId );
 
     if( result == ICE_RESULT_OK )
     {
-        printf("\nLocal Candidate %s --> Port %d\n", iceAgent->localCandidates[ 2 ]->id , iceAgent->localCandidates[ 2 ]->ipAddress.ipAddress.port );
+        printf("\nLocal Candidate --> Port %d\n", iceAgent->localCandidates[ 2 ]->ipAddress.ipAddress.port );
         
         printf( "\nSerialized Message :\n\n" );
         
@@ -148,7 +145,6 @@ void Generate_RemoteCandidate( IceAgent_t * iceAgent )
     IceResult_t result ;
     StunAttributeAddress_t stunAddress;
     IceIPAddress_t iceIpAddress;
-    char id[] = "remote@1";
 
     uint8_t ipAddressV6[] = { 0x20, 0x01, 0x0D, 0xB8, 0x12, 0x34, 0x56, 0x78,
                               0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 }; 
@@ -161,11 +157,11 @@ void Generate_RemoteCandidate( IceAgent_t * iceAgent )
     iceIpAddress.ipAddress = stunAddress;
     iceIpAddress.isPointToPoint = 0;
     
-    result = Ice_AddRemoteCandidate( id, iceAgent, ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE, iceIpAddress, ICE_SOCKET_PROTOCOL_TCP, 5 );
+    result = Ice_AddRemoteCandidate( iceAgent, ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE, iceIpAddress, ICE_SOCKET_PROTOCOL_TCP, 5 );
 
     if( result == ICE_RESULT_OK )
     {
-        printf("Remote Candidate %s --> Port %d\n", iceAgent->remoteCandidates[ 0 ]->id, iceAgent->remoteCandidates[ 0 ]->ipAddress.ipAddress.port );
+        printf("Remote Candidate --> Port %d\n", iceAgent->remoteCandidates[ 0 ]->ipAddress.ipAddress.port );
     }
     else
     {
@@ -182,7 +178,7 @@ void display_CandidatePairs( IceAgent_t * iceAgent )
     {
         if( iceAgent->iceCandidatePairs[i]->state != ICE_CANDIDATE_PAIR_STATE_INVALID )
         {
-            printf( "\nLocal : %s --> Remote : %s\n",iceAgent->iceCandidatePairs[i]->local->id, iceAgent->iceCandidatePairs[i]->remote->id );
+            printf( "\nLocal Candidate Port %d--> Remote Candidate Port : %d\n", iceAgent->iceCandidatePairs[i]->local->ipAddress.ipAddress.port , iceAgent->iceCandidatePairs[i]->remote->ipAddress.ipAddress.port );
         }
         else
         {
@@ -207,3 +203,4 @@ int main( void )
 
     return 0;
 }
+
