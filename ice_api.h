@@ -16,7 +16,7 @@
 
 /************************************************************************************************************************************************/
 
-IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername, char * localPassword, char * remoteUsername, char * remotePassword, TransactionIdStore_t * pBuffer );
+IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername, char * localPassword, char * remoteUsername, char * remotePassword, char * combinedUsername, TransactionIdStore_t * pBuffer );
 
 IceResult_t Ice_AddHostCandidate( const IceIPAddress_t ipAddr, IceAgent_t * pIceAgent );
 

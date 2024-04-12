@@ -19,7 +19,8 @@ uint8_t transactionId[] = { 0xB7, 0xE7, 0xA7, 0x01, 0xBC, 0x34,
 
 IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername, 
                                 char * localPassword, char * remoteUsername, 
-                                char * remotePassword, TransactionIdStore_t * pBuffer )
+                                char * remotePassword, char * combinedUsername, 
+                                TransactionIdStore_t * pBuffer )
 {
     IceResult_t retStatus = ICE_RESULT_OK;
 
@@ -34,6 +35,7 @@ IceResult_t Ice_CreateIceAgent( IceAgent_t * pIceAgent, char * localUsername,
         strcpy( pIceAgent->localPassword, localPassword );
         strcpy( pIceAgent->remoteUsername, remoteUsername );
         strcpy( pIceAgent->remotePassword, remotePassword );
+        strcpy( pIceAgent->combinedUserName, combinedUsername );
 
         pIceAgent->isControlling = 0;
         pIceAgent->tieBreaker = ( uint64_t ) rand(); //required as an attribute for STUN packet
@@ -633,7 +635,6 @@ IceResult_t Ice_HandleStunResponse( IceAgent_t * pIceAgent, uint8_t * pStunMessa
         switch( pStunHeader.messageType )
         {
             case STUN_MESSAGE_TYPE_BINDING_REQUEST:
-            
                 /* Check if received candidate with USE_CANDIDATE FLAG */
                 if( ( retStatus == ICE_RESULT_USE_CANDIDATE_FLAG ) && ( pIceCandidatePair->connectivityChecks == ICE_CONNECTIVITY_SUCCESS_FLAG ) )
                 {
@@ -675,7 +676,6 @@ IceResult_t Ice_HandleStunResponse( IceAgent_t * pIceAgent, uint8_t * pStunMessa
                     }
                 }
             case STUN_MESSAGE_TYPE_BINDING_SUCCESS_RESPONSE:
-            
                 if( Ice_TransactionIdStoreHasId( pIceAgent->pStunBindingRequestTransactionIdStore, pStunMessageBuffer + STUN_HEADER_TRANSACTION_ID_OFFSET ) )
                 {
                     if( retStatus == ICE_RESULT_UPDATE_SRFLX_CANDIDATE )
