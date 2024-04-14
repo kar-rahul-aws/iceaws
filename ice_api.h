@@ -34,7 +34,7 @@ IceResult_t Ice_CreateCandidatePair( IceAgent_t * pIceAgent, IceCandidate_t * pL
 
 IceResult_t Ice_UpdateSrflxCandidateAddress( IceAgent_t * pIceAgent,IceCandidate_t * pCandidate, const IceIPAddress_t * pIpAddr );
 
-IceResult_t Ice_InitializeStunPacket( StunContext_t * pStunCxt, uint8_t * transactionId, uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader, uint8_t * pTransactionIdBuffer, uint8_t isGenerateTransactionID, uint8_t isStunBindingRequest );
+IceResult_t Ice_InitializeStunPacket( StunContext_t * pStunCxt, uint8_t * transactionId, uint8_t * pStunMessageBuffer, StunHeader_t * pStunHeader, uint8_t isGenerateTransactionID, uint8_t isStunBindingRequest );
 
 IceResult_t Ice_PackageStunPacket( StunContext_t * pStunCxt, uint8_t * password, uint32_t passwordLen );
 
@@ -48,7 +48,7 @@ IceResult_t Ice_CreateResponseForRequest( IceAgent_t * pIceAgent, uint8_t * pStu
 
 IceResult_t Ice_DeserializeStunPacket( StunContext_t * pStunCxt, StunHeader_t * pStunHeader, StunAttribute_t * pStunAttribute, StunAttributeAddress_t * pStunAttributeAddress, uint32_t priority );
 
-IceResult_t Ice_HandleStunResponse( IceAgent_t * pIceAgent, uint8_t * pStunMessageBuffer, uint8_t pStunMessageBufferLength, uint8_t * pTransactionIdBuffer, IceCandidate_t * pLocalCandidate , IceIPAddress_t * pSrcAddr, IceCandidatePair_t * pIceCandidatePair );
+IceResult_t Ice_HandleStunResponse( IceAgent_t * pIceAgent, uint8_t * pStunMessageBuffer, uint8_t pStunMessageBufferLength, uint8_t * pTransactionIdBuffer, IceCandidate_t * pLocalCandidate , IceIPAddress_t pSrcAddr, IceCandidatePair_t * pIceCandidatePair );
 
 IceResult_t Ice_HandleServerReflexiveCandidateResponse( IceAgent_t * pIceAgent, StunAttributeAddress_t * pStunMappedAddress, IceCandidate_t * pLocalCandidate );
 
@@ -56,23 +56,23 @@ IceResult_t Ice_HandleServerReflexiveCandidateResponse( IceAgent_t * pIceAgent, 
 
 /* These APIs are intended for internal use by the ICE library. */
 
-static bool Ice_IsSameIpAddress(StunAttributeAddress_t * pAddr1, StunAttributeAddress_t * pAddr2, bool checkPort);
+bool Ice_IsSameIpAddress(StunAttributeAddress_t * pAddr1, StunAttributeAddress_t * pAddr2, bool checkPort);
 
-static bool Ice_IsSameIpAddress(StunAttributeAddress_t * pAddr1, StunAttributeAddress_t * pAddr2, bool checkPort);
+bool Ice_IsSameIpAddress(StunAttributeAddress_t * pAddr1, StunAttributeAddress_t * pAddr2, bool checkPort);
 
-static IceCandidate_t * Ice_FindCandidateFromIp( IceAgent_t * pIceAgent, IceIPAddress_t pIpAddress, bool isRemote );
+IceCandidate_t * Ice_FindCandidateFromIp( IceAgent_t * pIceAgent, IceIPAddress_t pIpAddress, bool isRemote );
 
-static void Ice_TransactionIdStoreRemove(TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId);
+void Ice_TransactionIdStoreRemove(TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId);
 
-static bool Ice_TransactionIdStoreHasId( TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId );
+bool Ice_TransactionIdStoreHasId( TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId );
 
-static void Ice_TransactionIdStoreInsert(TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId);
+void Ice_TransactionIdStoreInsert(TransactionIdStore_t * pTransactionIdStore, uint8_t * transactionId);
 
-static IceResult_t Ice_CreateTransactionIdStore(uint32_t maxIdCount, TransactionIdStore_t * pTransactionIdStore);
+IceResult_t Ice_CreateTransactionIdStore(uint32_t maxIdCount, TransactionIdStore_t * pTransactionIdStore);
 
-static uint64_t Ice_ComputeCandidatePairPriority( IceCandidatePair_t * pIceCandidatePair, uint32_t isLocalControlling );
+uint64_t Ice_ComputeCandidatePairPriority( IceCandidatePair_t * pIceCandidatePair, uint32_t isLocalControlling );
 
-static uint32_t Ice_ComputeCandidatePriority( IceCandidate_t * pIceCandidate );
+uint32_t Ice_ComputeCandidatePriority( IceCandidate_t * pIceCandidate );
 
 int Ice_GetValidCandidatePairCount( IceAgent_t * pIceAgent );
 
