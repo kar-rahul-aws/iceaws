@@ -28,7 +28,7 @@ IceResult_t Ice_AddRemoteCandidate( IceAgent_t * pIceAgent, IceCandidateType_t i
 
 IceResult_t Ice_InsertRemoteCandidate( IceAgent_t * pIceAgent, IceCandidate_t * pCandidate );
 
-IceResult_t Ice_CheckPeerReflexiveCandidate( IceAgent_t * pIceAgent, IceIPAddress_t pIpAddr, uint32_t priority );
+IceResult_t Ice_CheckPeerReflexiveCandidate( IceAgent_t * pIceAgent, IceIPAddress_t pIpAddr, uint32_t priority, IceCandidatePair_t * pIceCandidatePair );
 
 IceResult_t Ice_CreateCandidatePair( IceAgent_t * pIceAgent, IceCandidate_t * pLocalCandidate, IceCandidate_t * pRemoteCandidate );
 

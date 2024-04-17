@@ -18,6 +18,7 @@ IceCandidate_t localCandidates[ICE_MAX_LOCAL_CANDIDATE_COUNT] = { 0 };
 IceCandidate_t remoteCandidates[ICE_MAX_REMOTE_CANDIDATE_COUNT] = { 0 };
 IceCandidatePair_t candidatePairs[ICE_MAX_CANDIDATE_PAIR_COUNT] = { 0 };
 TransactionIdStore_t buffer[MAX_STORED_TRANSACTION_ID_COUNT] = { 0 };
+uint8_t stunBuffers[ICE_MAX_CANDIDATE_PAIR_COUNT] = { 0 };
 
 void test_IceAgentInit( IceAgent_t * iceAgent )
 {
@@ -32,17 +33,21 @@ void test_IceAgentInit( IceAgent_t * iceAgent )
     {
         int i;
 
-        for( i = 0; i<ICE_MAX_LOCAL_CANDIDATE_COUNT; i++ )
+        for( i = 0; i < ICE_MAX_LOCAL_CANDIDATE_COUNT; i++ )
         {
             iceAgent->localCandidates[i] = &localCandidates[i];
         }
-        for( i = 0; i<ICE_MAX_REMOTE_CANDIDATE_COUNT; i++ )
+        for( i = 0; i < ICE_MAX_REMOTE_CANDIDATE_COUNT; i++ )
         {
             iceAgent->remoteCandidates[i] = &remoteCandidates[i];
         }
-        for( i = 0; i<ICE_MAX_CANDIDATE_PAIR_COUNT; i++ )
+        for( i = 0; i < ICE_MAX_CANDIDATE_PAIR_COUNT; i++ )
         {
             iceAgent->iceCandidatePairs[i] = &candidatePairs[i];
+        }
+        for( i = 0; i < ICE_MAX_CANDIDATE_PAIR_COUNT; i++ )
+        {
+            iceAgent->stunMessageBuffers[i] = &stunBuffers[i];
         }
     }
     else
@@ -334,7 +339,7 @@ void test_HandleStunRequestFromRemoteCandidate( IceAgent_t * iceAgent )
     iceIpAddress.ipAddress = stunAddress;
     iceIpAddress.isPointToPoint = 0;
 
-    /* Initialise Dummy STUN Response and add it to Transaction ID store */
+    /* Initialise Dummy STUN Request */
     result = Ice_InitializeStunPacket( &pStunCxt, transactionId, stunMessageBuffer, &pStunHeader, 1, 1 );
     result =  StunSerializer_AddAttributeXorMappedAddress( &pStunCxt , &stunAddress );
 
@@ -484,7 +489,7 @@ void test_HandleStunResponseInResponseToNominatingCandidatePairRequest( IceAgent
 
 int main( void )
 {
-    IceAgent_t *iceAgent = malloc(sizeof(struct IceAgent));
+    IceAgent_t * iceAgent = malloc(sizeof(struct IceAgent));
 
     test_IceAgentInit( iceAgent );
 
@@ -518,3 +523,4 @@ int main( void )
 
     return 0;
 }
+
