@@ -4,19 +4,14 @@ APP_NAME 		= "test_app.bin"
 
 # Source Files
 SRCS += "test_app.c"
-SRCS += "../ice_api.c"
-SRCS += "../stun_serializer.c"
-SRCS += "../stun_deserializer.c"
-SRCS += "../stun_endianness.c"
+SRCS += "../source/ice_api.c"
+SRCS += "../source/dependency/amazon-kinesis-video-streams-stun/source/stun_serializer.c"
+SRCS += "../source/dependency/amazon-kinesis-video-streams-stun/source/stun_deserializer.c"
+SRCS += "../source/dependency/amazon-kinesis-video-streams-stun/source/stun_endianness.c"
 
 # Include Directories
-INCLUDE_DIRS += "../ice_api.h"
-INCLUDE_DIRS += "../ice_data_types.h"
-INCLUDE_DIRS += "../stun_data_types.h"
-INCLUDE_DIRS += "../stun_serializer.h"
-INCLUDE_DIRS += "../stun_deserializer.h"
-INCLUDE_DIRS += "../stun_endianness.h"
-
+INCLUDE_DIRS += "-I../source/include"
+INCLUDE_DIRS += "-I../source/dependency/amazon-kinesis-video-streams-stun/source/include"
 
 OBJS=$(SRCS:.c=.o)
 
